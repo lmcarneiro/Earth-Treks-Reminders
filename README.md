@@ -1,5 +1,5 @@
 # Earth-Treks-Reminders
-Get notified when a reservation opens up at Earth Treks!
+### Get notified when a reservation opens up at Earth Treks!
 
 *Please note that the POST request is currently only for the Crystal City location in VA.*
 
