@@ -1,7 +1,7 @@
 # Earth-Treks-Reminders
 Get notified when a reservation opens up at Earth Treks!
 
-*Please note that the pull request is currently only for the Crystal City location in VA.*
+*Please note that the POST request is currently only for the Crystal City location in VA.*
 
 You will have to set up an email account that can send the reminder emails for you. You can follow the tutorial at https://realpython.com/python-send-email/.
 
