@@ -154,7 +154,7 @@ if 'space' in slot_v:
                   ' from Python.').format(num_slots, slot_t)
     print(message)
     reminder(receiver, message)
-    cron = CronTab(user='lucas')
+    cron = CronTab(user='User')
     job = next(cron.find_comment('Earth Treks'))
     cron.remove(job)
     cron.write()
