@@ -12,11 +12,6 @@ from reminder import reminder
 from crontab import CronTab
 import sys
 
-cron = CronTab(user='lucas')
-job = next(cron.find_comment('Earth Treks'))
-job.enable()
-cron.write()
-
 args = sys.argv
 args = iter(args[1:])
 receiver = []
@@ -28,6 +23,20 @@ while True:
         date_choice = int(i)
         break
 time = int(next(args))
+
+command = ('python ' 
+	   'Path'
+           'earth_treks.py %s %d %d > /tmp/EarthTreks.log 2>&1' %(args[0],
+                                                                  date_choice,
+                                                                  time))
+
+cron = CronTab(user='User')
+try:
+    job = next(cron.find_comment('Earth Treks'))
+except:    
+    job = cron.new(command=command, comment='Earth Treks')
+    job.minute.every(1)
+    cron.write()
 
 
 ET_URL = 'https://app.rockgympro.com/b/widget/?'
@@ -130,7 +139,7 @@ if len(time_slots.values()) > 0:
     slot_v = list(time_slots.values())[time]
 
 if 'space' in slot_v:
-    num_slots = int(slot_v.split(' spaces')[0])
+    num_slots = int(slot_v.split(' space')[0])
     if num_slots == 1:
         message = ('Subject: Your Sign-Up Reminder\n\nThere is 1 spot available'
                    ' on {}.\n\nThis message was sent from Python.').format(slot_t)
@@ -142,7 +151,7 @@ if 'space' in slot_v:
     reminder(receiver, message)
     cron = CronTab(user='lucas')
     job = next(cron.find_comment('Earth Treks'))
-    job.enable(False)
+    cron.remove(job)
     cron.write()
 else:
     print('Crontab is running this script every minute until a spot opens up')
