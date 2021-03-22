@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Must be called in terminal as 'earth_treks_v1.py receiver(s) date_choice time'
+Must be called in terminal as 'python earth_treks_v1.py receiver(s) date_choice time'
 """
 
 import requests
