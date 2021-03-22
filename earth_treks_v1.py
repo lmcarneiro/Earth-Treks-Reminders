@@ -24,11 +24,16 @@ while True:
         break
 time = int(next(args))
 
+rcvr_str = ''
+for email in receiver:
+    rcvr_str += email
+    rcvr_str += ' '
+
 command = ('python ' 
 	   'Path'
-           'earth_treks.py %s %d %d > /tmp/EarthTreks.log 2>&1' %(args[0],
-                                                                  date_choice,
-                                                                  time))
+           'earth_treks.py %s%d %d > /tmp/EarthTreks.log 2>&1' %(rcvr_str,
+                                                                 date_choice,
+                                                                 time))
 
 cron = CronTab(user='User')
 try:
