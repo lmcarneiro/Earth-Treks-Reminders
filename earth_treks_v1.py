@@ -1,20 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Must be called in terminal as 'python earth_treks_v1.py receiver(s) date_choice time'
+Must be called in terminal as 'earth_treks_v1.py receiver(s) date_choice time'
 """
 
-import requests
-from datetime import date, timedelta
-from bs4 import BeautifulSoup
+from datetime import date, timedelta, datetime
 import re
-from reminder import reminder
-from crontab import CronTab
 import sys
+import os
+from crontab import CronTab
+from bs4 import BeautifulSoup
+import requests
+from delete_cron import delete_cron
+from reminder import reminder
 
 args = sys.argv
-args = iter(args[1:])
+args = args[1:]
 receiver = []
+
+today = date.today()
+
+try:
+    with open('/path/start.txt', 'r') as f:
+        first_day = f.read()
+    if first_day == '':
+        os.remove('/path/start.txt')
+
+except FileNotFoundError:
+    with open('/path/start.txt', 'w') as f:
+        f.write(str(today))
+    print('This job is being set on %s' %today)
+    first_day = today
+
 while True:
     i = next(args)
     if i.isdigit() is False:
@@ -28,22 +45,37 @@ rcvr_str = ''
 for email in receiver:
     rcvr_str += email
     rcvr_str += ' '
+    
+try:
+    with open('/path/date.txt', 'r') as f:
+        show_date = f.read()
+    if show_date == '':
+        os.remove('/path/date.txt')
+except FileNotFoundError:
+    show_date = str(today + timedelta(days=date_choice))
+    with open('/path/date.txt', 'w') as f:
+        f.write(show_date)
+        
+date_choice = datetime.strptime(show_date, '%Y-%m-%d').date() - today
+date_choice = date_choice.days
+        
+print('Looking for spots on %s.' %show_date)
+print()
 
-command = ('python ' 
-	   'Path'
-           'earth_treks.py %s%d %d > /tmp/EarthTreks.log 2>&1' %(rcvr_str,
-                                                                 date_choice,
-                                                                 time))
+command = ('python '
+           'Path'
+           'earth_treks_v1.py %s %d %d > /tmp/EarthTreks.log 2>&1' %(args[0],
+                                                                  date_choice,
+                                                                  time))
 
 cron = CronTab(user='User')
 try:
     job = next(cron.find_comment('Earth Treks'))
-except:    
+except StopIteration:    
     job = cron.new(command=command, comment='Earth Treks')
     job.minute.every(1)
     cron.write()
-
-
+            
 ET_URL = 'https://app.rockgympro.com/b/widget/?'
 
 headers_g = {'User-Agent': 'Mozilla/5.0',
@@ -63,8 +95,6 @@ params_g = {'a':'offering',
 params_p = {'a':'equery'}
 
 session = requests.Session()
-
-show_date = date.today() + timedelta(days = date_choice)
 
 data = {
 	"PreventChromeAutocomplete": "",
@@ -134,29 +164,35 @@ no_slot = available_soup.find_all(string=re.compile('full'))
 slots = [slot.strip('\n') for slot in slots]
 time_slots = dict(zip(times, slots))
 
-print(time_slots)
-print()
-
 slot_v = []
 if len(time_slots.keys()) > 0:
     slot_t = list(time_slots.keys())[time]
 if len(time_slots.values()) > 0:
     slot_v = list(time_slots.values())[time]
+    
 
 if 'space' in slot_v:
     num_slots = int(slot_v.split(' space')[0])
+    slot_t = slot_t.replace('to  ', 'to ')
     if num_slots == 1:
         message = ('Subject: Your Sign-Up Reminder\n\nThere is 1 spot available'
-                   ' on {}.\n\nThis message was sent from Python.').format(slot_t)
+                   ' on {}.'
+                   '\n\nThis message was sent from Python.').format(slot_t)
     elif num_slots > 1:
         message = ('Subject: Your Sign-Up Reminder\n\nThere are {0} spots'
-                  ' available on {1}.\n\nThis message was sent'
-                  ' from Python.').format(num_slots, slot_t)
-    print(message)
+                  ' available on {1}.'
+                  '\n\nThis message was sent from Python.').format(num_slots, slot_t)
+    if message != {}:
+        print(message)
+        
     reminder(receiver, message)
-    cron = CronTab(user='User')
-    job = next(cron.find_comment('Earth Treks'))
-    cron.remove(job)
-    cron.write()
+    delete_cron()
+    
 else:
-    print('Crontab is running this script every minute until a spot opens up')
+    print('This job was started on %s. Today is %s.' %(first_day, str(today)))
+    if date_choice < 0:
+        delete_cron()
+        print('No spots opened up for you, crontab will stop looking.')
+    else:            
+        print('Crontab is running this script every minute until a spot opens up.')
+        
